@@ -4,17 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 )
 
 type ModelService struct {
-	baseURL  string
-	cookies  []*http.Cookie
-	client   *http.Client
-	username string
-	password string
+	baseURL        string
+	cookies        []*http.Cookie
+	client         *http.Client
+	username       string
+	password       string
+	notifyCategraf bool
+	CategrafUrl    string
 }
 
 type ModelInstance struct {
@@ -37,18 +40,28 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+type MetricData struct {
+	Endpoint  string `json:"endpoint"`
+	Tags      string `json:"tags"`
+	Timestamp int64  `json:"timestamp"`
+	Metric    string `json:"metric"`
+	Value     int    `json:"value"`
+}
+
 // 添加重试相关的常量
 const (
 	maxRetries = 3
 	retryDelay = 5 * time.Second
 )
 
-func NewModelService(baseURL, username, password string) *ModelService {
+func NewModelService(baseURL, username, password, CategrafUrl string, notifyCategraf bool) *ModelService {
 	return &ModelService{
-		baseURL:  baseURL,
-		username: username,
-		password: password,
-		client:   &http.Client{Timeout: 10 * time.Second},
+		baseURL:        baseURL,
+		username:       username,
+		password:       password,
+		notifyCategraf: notifyCategraf,
+		CategrafUrl:    CategrafUrl,
+		client:         &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
@@ -122,6 +135,7 @@ func (s *ModelService) WatchErrorModels() {
 
 			// 检查实例状态
 			for _, instance := range instances {
+				isDelete := false
 				log.Printf("instance: %+v", instance)
 				if instance.State == "error" {
 					log.Printf("发现错误状态的模型: ID=%d, Name=%s, Message=%s",
@@ -133,13 +147,20 @@ func (s *ModelService) WatchErrorModels() {
 					} else {
 						log.Printf("成功删除错误状态的模型: ID=%d, Name=%s",
 							instance.ModelID, instance.ModelName)
+						isDelete = true
+
+					}
+				}
+				if s.notifyCategraf {
+					if err := s.TellN9e(isDelete, instance.ModelName); err != nil {
+						log.Printf("TellN9e 失败: %v", err)
 					}
 				}
 			}
 		}
 
 		// 等待30秒后继续下一轮检查
-		time.Sleep(30 * time.Second)
+		time.Sleep(60 * time.Second)
 	}
 }
 
@@ -289,4 +310,51 @@ func (s *ModelService) deleteModel(ID int) error {
 
 		return nil
 	})
+}
+
+func (s *ModelService) TellN9e(isDelete bool, modelName string) error {
+	currentTimeTs := time.Now().Unix()
+	value := 0
+	if isDelete {
+		value = 1
+	}
+	metric := MetricData{
+		Endpoint:  "",
+		Tags:      fmt.Sprintf("modelName='%s'", modelName),
+		Timestamp: currentTimeTs,
+		Metric:    "ga.gpuStack.modelName.restart",
+		Value:     value,
+	}
+	// 将结构体编码为 JSON 格式
+	jsonData, err := json.Marshal(metric)
+	if err != nil {
+		return err
+	}
+
+	//N9eUrl := "http://192.168.45.10:9111/api/push/openfalcon"
+
+	// 创建 HTTP POST 请求
+	resp, err := http.Post(fmt.Sprintf("%s/api/push/openfalcon", s.CategrafUrl), "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Printf("发送请求出错: %v\n", err)
+		return err
+	}
+	// 确保在函数结束时关闭响应体
+	defer resp.Body.Close()
+
+	// 读取响应体内容
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("读取响应体出错: %v\n", err)
+		return err
+	}
+	// 检查响应状态码
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("指标推送失败，状态码: %d，错误信息: %s\n", resp.StatusCode, string(body))
+	}
+
+	// 打印格式化后的 JSON 字符串
+	fmt.Println(string(jsonData))
+	return nil
+
 }

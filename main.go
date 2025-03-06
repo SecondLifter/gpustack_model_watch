@@ -11,9 +11,11 @@ import (
 
 func main() {
 	// 命令行参数
-	baseURL := flag.String("url", "http://127.0.0.1", "API基础URL")
+	baseURL := flag.String("url", "http://192.168.45.10", "API基础URL")
 	username := flag.String("username", "admin", "API用户名")
-	password := flag.String("password", "123422", "API密码")
+	password := flag.String("password", "Yskj@2022@", "API密码")
+	notifyCategraf := flag.Bool("notifyCategraf", false, "是否通知Categraf")
+	CategrafUrl := flag.String("CategrafUrl", "http://192.168.45.10", "N9E基础URL")
 	flag.Parse()
 
 	if *username == "" || *password == "" {
@@ -21,7 +23,7 @@ func main() {
 	}
 
 	// 创建服务实例
-	modelService := services.NewModelService(*baseURL, *username, *password)
+	modelService := services.NewModelService(*baseURL, *username, *password, *CategrafUrl, *notifyCategraf)
 
 	// 尝试首次登录
 	if err := modelService.Login(); err != nil {

@@ -1,0 +1,1 @@
+env GOOS=linux GOARCH=amd64 go build -o gpustack_model_watch main.go

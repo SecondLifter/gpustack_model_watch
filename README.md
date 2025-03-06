@@ -26,22 +26,8 @@ go build -o model-watcher
 - `-url`: API 基础 URL (默认: "http://127.0.0.1")
 - `-username`: 登录用户名 (默认: "admin")
 - `-password`: 登录密码 (默认: "TKn2QhA9wf7wy")
-
-### 登录接口
-```
-POST /auth/login
-Content-Type: application/x-www-form-urlencoded
-
-参数：
-- username: 用户名
-- password: 密码
-
-返回：
-- 200: 登录成功，返回 token
-- 400: 登录失败
-```
-
-
+-  `-notifyCategraf`: 是否通知N9E (默认: false)
+-  `-Categrafurl`: N9E基础URL (默认: "http://192.168.45.10")
 
 ## 错误处理
 

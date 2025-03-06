@@ -1,0 +1,3 @@
+module GPUSTACK_WATCH
+
+go 1.20

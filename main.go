@@ -11,9 +11,9 @@ import (
 
 func main() {
 	// 命令行参数
-	baseURL := flag.String("url", "http://172.18.46.91", "API基础URL")
+	baseURL := flag.String("url", "http://127.0.0.1", "API基础URL")
 	username := flag.String("username", "admin", "API用户名")
-	password := flag.String("password", "Yskj@2022@", "API密码")
+	password := flag.String("password", "123422", "API密码")
 	flag.Parse()
 
 	if *username == "" || *password == "" {

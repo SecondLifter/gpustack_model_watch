@@ -41,83 +41,7 @@ Content-Type: application/x-www-form-urlencoded
 - 400: 登录失败
 ```
 
-### 获取模型列表
-```
-GET /v1/models
 
-
-参数：
-{
-    "search": "string",
-    "page": 0,
-    "perPage": 0,
-    "categories": "array<string>",
-    "watch": "boolean"
-}
-
-返回：
-200:
-{
-    "items": [
-        {
-            "id": 0,
-            "source": "huggingface",
-            "name": "string",
-            "description": "string",
-            ...
-        }
-    ],
-    "pagination": {
-        "page": 0,
-        "perPage": 0,
-        "total": 0,
-        "totalPage": 0
-    }
-}
-```
-
-### 获取模型实例状态
-```
-GET /v1/models/{id}/instances
-
-参数：
-{
-    "id": int,
-    "page": 0,
-    "perPage": 0,
-    "watch": "boolean"
-}
-
-返回：
-200:
-{
-    "items": [
-        {
-            "id": 0,
-            "model_id": 0,
-            "model_name": "string",
-            "state": "string",
-            "state_message": "string",
-            ...
-        }
-    ],
-    "pagination": {
-        "total": 0
-    }
-}
-```
-
-### 删除模型实例
-```
-DELETE /v1/model-instances/{id}
-
-参数：
-- id: 实例ID
-
-返回：
-- 200: 删除成功
-- 400: 删除失败
-```
 
 ## 错误处理
 
@@ -141,13 +65,3 @@ DELETE /v1/model-instances/{id}
 3. 所有操作都会记录到日志中
 4. 删除操作不可恢复，请谨慎使用
 ```
-
-这个 README 文件包含了：
-1. 项目概述和主要功能
-2. 构建和运行说明
-3. 详细的 API 接口文档
-4. 错误处理机制说明
-5. 监控逻辑说明
-6. 注意事项
-
-如果需要添加或修改其他内容，请告诉我。
